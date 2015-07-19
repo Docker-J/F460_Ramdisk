@@ -1,0 +1,160 @@
+import /init.tigerf.rc
+import /init.tiger6_product.rc
+
+#on early-fs
+#    ffu_update
+
+on chargerlogo
+   start log-kernel
+   stop bootlogo
+   write /sys/class/android_usb/android0/enable 0
+   write /sys/class/android_usb/android0/idVendor 1004
+   write /sys/class/android_usb/android0/idProduct 6300
+   write /sys/class/android_usb/android0/bDeviceClass 0
+   write /sys/class/android_usb/android0/bDeviceSubClass 0
+   write /sys/class/android_usb/android0/bDeviceProtocol 0
+   write /sys/class/android_usb/android0/functions charge_only
+   write /sys/class/android_usb/android0/enable 1
+   exec /sbin/chargerlogo
+
+#LGE_CHANGE_S, restart qcamerasvr when restarting mediaserver and servicemanager, yousung.kang@lge.com
+on property:init.svc.media=restarting
+    restart qcamerasvr
+on property:init.svc.servicemanager=restarting
+    restart qcamerasvr
+#LGE_CHANGE_E, restart qcamerasvr when restarting mediaserver and servicemanager, yousung.kang@lge.com
+
+# Begin Immersion changes(donguk.ki@lge.com)
+service immvibed /system/bin/immvibed
+    class main
+    user shell
+    group shell system
+    oneshot
+# End Immersion changes
+
+on boot
+#Emotional LED
+   chown system system /sys/devices/virtual/lg_rgb_led/use_patterns/blink_patterns
+   chmod 0664 /sys/devices/virtual/lg_rgb_led/use_patterns/blink_patterns
+   chown system system /sys/devices/virtual/lg_rgb_led/use_patterns/input_patterns
+   chmod 0664 /sys/devices/virtual/lg_rgb_led/use_patterns/input_patterns
+   chown system system /sys/devices/virtual/lg_rgb_led/use_patterns/onoff_patterns
+   chmod 0664 /sys/devices/virtual/lg_rgb_led/use_patterns/onoff_patterns
+   chown system system /sys/devices/virtual/lg_rgb_led/use_patterns/setting
+   chmod 0664 /sys/devices/virtual/lg_rgb_led/use_patterns/setting
+   write /sys/devices/virtual/lg_rgb_led/use_patterns/setting 1
+
+#Touch_Knock_on
+   chown system system /sys/devices/virtual/input/lge_touch/lpwg_data
+   chmod 664 /sys/devices/virtual/input/lge_touch/lpwg_data
+   chown system system /sys/devices/virtual/input/lge_touch/lpwg_notify
+   chmod 664 /sys/devices/virtual/input/lge_touch/lpwg_notify
+   chown system system /sys/devices/virtual/input/lge_touch/incoming_call
+   chmod 664 /sys/devices/virtual/input/lge_touch/incoming_call
+   chown system lgkeyguard /sys/devices/virtual/input/lge_touch/keyguard
+   chmod 664 /sys/devices/virtual/input/lge_touch/keyguard
+   chown system system /sys/devices/virtual/input/lge_touch/ime_status
+   chmod 664 /sys/devices/virtual/input/lge_touch/ime_status
+   chown system system /sys/devices/virtual/input/lge_touch/quick_cover_status
+   chmod 664 /sys/devices/virtual/input/lge_touch/quick_cover_status
+   chown system system /sys/devices/virtual/input/lge_touch/ts_noise_log_enable
+   chmod 664 /sys/devices/virtual/input/lge_touch/ts_noise_log_enable
+   chown system system /sys/devices/virtual/input/lge_touch/ts_noise
+   chmod 664 /sys/devices/virtual/input/lge_touch/ts_noise
+
+on post-fs
+# Filesystem : Change permission for mpt
+   chmod 0775 /mpt
+   chown system system /mpt
+# LGE_CHANGE_S, 20111226, jin.park@lge.com, Mobile DM Router
+    chmod 0660 /dev/lge_dm_tty0
+    chown system system /dev/lge_dm_tty0
+# LGE_CHANGE_E, 20111226, jin.park@lgm
+
+# LGE_CHANGE_S, 20140107, jin.park@lge.com, LGODM application
+service lg_dm_router1 /system/bin/lg_dm_router 1
+    class late_start
+    user system
+    group system sdcard_r sdcard_rw
+    disabled
+    oneshot
+
+on property:persist.service.odm_log.enable=true
+     start lg_dm_router1
+#on property:persist.service.odm_log.enable=true
+#     stop lg_dm_router1
+
+service lg_dm_router2 /system/bin/lg_dm_router 2
+    class late_start
+    user system
+    group system
+    disabled
+    socket Full.DM.port stream 660 system system
+
+on property:persist.service.dm_app.enable=true
+    start lg_dm_router2
+on property:persist.service.dm_app.enable=false
+    stop lg_dm_router2
+
+service lg_odm_service /system/bin/lg_odm_service
+    class late_start
+    user system
+    group system net_raw sdcard_r sdcard_rw
+    disabled
+    oneshot
+    socket Full.ODM.port stream 660 system system
+
+on property:persist.service.odm_app.enable=true
+    start lg_odm_service
+# LGE_CHANGE_E, 20140107, jin.park@lge.com, LGODM application
+
+#Emotional LED
+	chown system system /sys/devices/virtual/lg_rgb_led/use_patterns/blink_patterns
+	chmod 0664 /sys/devices/virtual/lg_rgb_led/use_patterns/blink_patterns
+	chown system system /sys/devices/virtual/lg_rgb_led/use_patterns/input_patterns
+	chmod 0664 /sys/devices/virtual/lg_rgb_led/use_patterns/input_patterns
+	chown system system /sys/devices/virtual/lg_rgb_led/use_patterns/onoff_patterns
+	chmod 0664 /sys/devices/virtual/lg_rgb_led/use_patterns/onoff_patterns
+	chown system system /sys/devices/virtual/lg_rgb_led/use_patterns/setting
+	chmod 0664 /sys/devices/virtual/lg_rgb_led/use_patterns/setting
+	write /sys/devices/virtual/lg_rgb_led/use_patterns/setting 1
+
+#LGBackup SystemService Daemon
+service bnrd /system/bin/bnrd
+      class main
+      socket bnrd stream 660 root system
+      user root
+      group system radio sdcard_rw
+# LGE Data, DSQN service juhwan.park@lge.com
+service dsqn /system/bin/dsqn
+    disabled
+    user root
+
+on property:persist.service.dsqn=1
+    start dsqn
+
+on property:persist.service.dsqn=0
+    stop dsqn
+
+#LGE_CHANGE_S, MOCA, donggee.im@lge.com
+service moca_service /system/bin/advanced_moca -s
+    class late_start
+    user root
+    group system sdcard_r sdcard_rw radio
+    disabled
+    oneshot
+    socket Full.MOCA.port stream 660 system system
+
+on property:persist.service.moca.enable=1
+   start moca_service
+
+service moca_service_disable /system/bin/advanced_moca -k
+    class late_start
+    user root
+    group system sdcard_r sdcard_rw radio
+    disabled
+    oneshot
+
+on property:persist.service.moca.enable=0
+   start moca_service_disable
+#LGE_CHANGE_E, MOCA, donggee.im@lge.com

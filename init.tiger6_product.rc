@@ -1,0 +1,57 @@
+## Be careful to use "exec" command.
+## If you execute a non-existing file, an additional init process can be created!
+
+on boot
+# 2013-02-25 hyoseab.song@lge.com LGP_DATA_TCPIP_TCP_BUFSIZE_SKT [START]
+# Re-define TCP buffer size for SKT WCDMA network. Overwrite init.rc property
+# ReadMin, ReadInitial, ReadMax, WriteMin, WriteInitial, WriteMax,
+    setprop net.tcp.buffersize.umts		4094,87380,1220608,4096,16384,1220608
+    setprop net.tcp.buffersize.hspa		4094,87380,1220608,4096,16384,1220608
+    setprop net.tcp.buffersize.hsupa	4094,87380,1220608,4096,16384,1220608
+    setprop net.tcp.buffersize.hsdpa	4094,87380,1220608,4096,16384,1220608
+    setprop net.tcp.buffersize.lte     2097152,4194304,8388608,1048576,3145728,4194304
+# 2013-02-25 hyoseab.song@lge.com LGP_DATA_TCPIP_TCP_BUFSIZE_SKT [END]
+# LGE_CHANGE_S, [LGE_DATA][LGP_DATA_TCPIP_NSRM], kwangbin.yim@lge.com, 2013-12-30
+    setprop lg.data.nsrm.policypath         /data/connectivity/nsrm/NsrmConfiguration.xml
+    setprop persist.cne.nsrm.bkg.evt        3955
+    chmod 0644 /persist/init.cne.rc
+    mkdir /data/connectivity 0775 system system
+    mkdir /data/connectivity/nsrm 0775 system system
+    copy /system/etc/cne/libcnelog.so /data/connectivity/libcnelog.so
+# LGE_CHANGE_E, [LGE_DATA][LGP_DATA_TCPIP_NSRM], kwangbin.yim@lge.com, 2013-12-30
+
+#20130405 PM service ny.han@lge.com [START] -----------------------
+mkdir /data/playready 0777 system system
+chown system system /data/playready
+chmod 0777 /data/playready
+mkdir /data/pmsc 0777 system system
+chown system system /data/pmsc
+chmod 0777 /data/pmsc
+copy /system/skt/pmservice_cert/bgroupcert.dat /data/pmsc/bgroupcert.dat
+copy /system/skt/pmservice_cert/devcerttemplate.dat /data/pmsc/devcerttemplate.dat
+copy /system/skt/pmservice_cert/priv.dat /data/pmsc/priv.dat
+copy /system/skt/pmservice_cert/zgpriv.dat /data/pmsc/zgpriv.dat
+chown system system /data/pmsc/bgroupcert.dat
+chown system system /data/pmsc/devcerttemplate.dat
+chown system system /data/pmsc/priv.dat
+chown system system /data/pmsc/zgpriv.dat
+chmod 0444 /data/pmsc/bgroupcert.dat
+chmod 0444 /data/pmsc/devcerttemplate.dat
+chmod 0444 /data/pmsc/priv.dat
+chmod 0444 /data/pmsc/zgpriv.dat
+#20130405 PM service ny.han@lge.com [END] -----------------------
+
+#20130830 TBasePlatform yung.im@lge.com [START] -----------------------
+    chown wifi wifi /system/lib/libiwlan_module.so
+    chmod 0644 /system/lib/libiwlan_module.so
+    chmod 0755 /system/bin/tbased
+    mkdir /data/tbased
+    chown wifi wifi /data/tbased
+    chmod 0755 /data/tbased
+
+    service tbased /system/bin/tbased
+        class main
+        user root
+        oneshot
+#20130830 TBasePlatform yung.im@lge.com [END] -----------------------
+
